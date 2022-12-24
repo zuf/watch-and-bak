@@ -21,14 +21,17 @@ type Conf struct {
 }
 
 func Usage() {
-	fmt.Printf("Usage: %s [OPTIONS] /path/to/file\n", os.Args[0])
+	fmt.Printf("Usage:\n  %s [OPTIONS] /path/to/file [/path/to/another/file] ...\n\n", filepath.Base(os.Args[0]))
 	flag.PrintDefaults()
 }
 
 func InitConf() *Conf {
 	conf := new(Conf)
 
-	flag.DurationVar(&conf.PollPeriod, "n", 60*time.Second, "Specify polling interval. "+`A duration string is a sequence of decimal numbers, each with optional fraction and a unit suffix, such as "1m30s" or "-1.5h". Valid time units are "s", "m", "h"`)
+	flag.DurationVar(&conf.PollPeriod, "n", 60*time.Second,
+		`Specify polling interval. A duration string is a sequence of decimal
+numbers, each with optional fraction and a unit suffix, such as "1m30s"
+or "-1.5h". Valid time units are "s", "m", "h"`)
 	flag.StringVar(&conf.BackupDir, "d", "./bak", "Specify backup directory")
 	flag.IntVar(&conf.GzipLevel, "z", gzip.BestCompression, fmt.Sprintf("Specify gzip compression level. Values from %d to %d.", gzip.BestSpeed, gzip.BestCompression))
 
@@ -148,35 +151,42 @@ func main() {
 	conf = InitConf()
 	flag.Parse()
 
-	if flag.NArg() == 0 {
+	if flag.NArg() <= 0 {
 		flag.Usage()
 		os.Exit(1)
 	}
 
-	filePath := flag.Arg(0)
-	fmt.Printf("Watch and backup file: %s\n", filePath)
+	prevHashSums := make(map[int][]byte)
+	prevFileStats := make(map[int]os.FileInfo)
 
-	prevHashSum := Sha1Sum(filePath)
+	fmt.Printf("Watch and backup files:\n")
+	for index, file := range flag.Args() {
+		fmt.Printf("  %s\n", file)
 
-	prevFileStat := FileStatOrDie(filePath)
+		prevHashSums[index] = Sha1Sum(file)
+		prevFileStats[index] = FileStatOrDie(file)
+	}
+
 	for {
-		// log.Printf("Polling begins...")
+		for index, filePath := range flag.Args() {
 
-		fileStat := FileStatOrDie(filePath)
+			prevFileStat := prevFileStats[index]
+			fileStat := FileStatOrDie(filePath)
 
-		if prevFileStat.ModTime() != fileStat.ModTime() {
-			prevFileStat = fileStat
+			if prevFileStat.ModTime() != fileStat.ModTime() {
+				prevFileStat = fileStat
 
-			hashSum := Sha1Sum(filePath)
+				prevHashSum := prevHashSums[index]
+				hashSum := Sha1Sum(filePath)
 
-			if !bytes.Equal(prevHashSum, hashSum) {
-				prevHashSum = hashSum
+				if !bytes.Equal(prevHashSum, hashSum) {
+					prevHashSum = hashSum
 
-				BackupFile(filePath)
+					BackupFile(filePath)
+				}
 			}
-		}
 
-		// log.Printf("Polling done. Sleeping...")
-		time.Sleep(conf.PollPeriod)
+			time.Sleep(conf.PollPeriod)
+		}
 	}
 }

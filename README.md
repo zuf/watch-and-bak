@@ -3,14 +3,27 @@
 Very simple backup tool.
 Watches for given file and make backups (.gz) in separate dir after that file was changed.
 
+## Install
+
+```
+$ go install github.com/zuf/watch-and-bak@latest
+```
+
+
 ## Usage
 
 ```
-Usage: ./watch-and-bak [OPTIONS] /path/to/file
+$ watch-and-bak --help
+
+Usage:
+  watch-and-bak [OPTIONS] /path/to/file [/path/to/another/file] ...
+
   -d string
     	Specify backup directory (default "./bak")
   -n duration
-    	Specify polling interval. A duration string is a sequence of decimal numbers, each with optional fraction and a unit suffix, such as "1m30s" or "-1.5h". Valid time units are "s", "m", "h" (default 1m0s)
+    	Specify polling interval. A duration string is a sequence of decimal
+    	numbers, each with optional fraction and a unit suffix, such as "1m30s"
+    	or "-1.5h". Valid time units are "s", "m", "h" (default 1m0s)
   -p string
     	Specify backup file prefix
     	Format explanation:	
