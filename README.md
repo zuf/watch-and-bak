@@ -85,6 +85,6 @@ Usage:
 $ ./watch-and-bak.sh /path/to/your/files...
 ```
 
-This script justan example, adapt for your needs.
+This script just an example, adapt for your needs.
 
 [watch-and-bak.sh](watch-and-bak.sh)
