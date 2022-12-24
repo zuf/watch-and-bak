@@ -44,9 +44,11 @@ Usage:
 ```
 
 
-## Alternatives (on linux)
+## Alternative (on linux)
 
-Do not want use weird software from internet? Use plain old bash like that (you need to install `inotify-tools`):
+Do not want use weird software from internet?
+
+Use plain old bash like that (you need to install `inotify-tools`):
 
 
 ```bash
@@ -74,6 +76,13 @@ do
 	
 	sleep $SLEEP_PERIOD
 done
+```
+
+Usage:
+
+
+```
+$ ./watch-and-bak.sh /path/to/your/files...
 ```
 
 This script justan example, adapt for your needs.
