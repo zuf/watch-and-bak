@@ -14,10 +14,16 @@ import (
 )
 
 type Conf struct {
-	PollPeriod    time.Duration
-	BackupDir     string
+	PollPeriod time.Duration
+	// BackupDir     string
 	BakFilePrefix string
 	GzipLevel     int
+}
+
+type WatchFile struct {
+	// TODO
+	// sha1 sum
+	//
 }
 
 func Usage() {
@@ -32,7 +38,7 @@ func InitConf() *Conf {
 		`Specify polling interval. A duration string is a sequence of decimal
 numbers, each with optional fraction and a unit suffix, such as "1m30s"
 or "-1.5h". Valid time units are "s", "m", "h"`)
-	flag.StringVar(&conf.BackupDir, "d", "./bak", "Specify backup directory")
+	// flag.StringVar(&conf.BackupDir, "d", "./bak", "Specify backup directory")
 	flag.IntVar(&conf.GzipLevel, "z", gzip.BestCompression, fmt.Sprintf("Specify gzip compression level. Values from %d to %d.", gzip.BestSpeed, gzip.BestCompression))
 
 	fimeFormatHelp := `Format explanation:	
@@ -81,10 +87,18 @@ func FileStatOrDie(filePath string) os.FileInfo {
 func MakeBackupDirForFile(filePath string) string {
 	now := time.Now()
 
-	baseBakDir, err := filepath.Abs(conf.BackupDir)
+	// baseBakDir, err := filepath.Abs(conf.BackupDir)F
+	absFilePath, err := filepath.Abs(filePath)
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	// TODO Ability to change "bak" dir in conf
+	baseBakDir, err := filepath.Abs(filepath.Join(filepath.Dir(absFilePath), "bak"))
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	subDir := now.Format("2006-01-02")
 	bakDir := filepath.Join(baseBakDir, subDir)
 
@@ -142,7 +156,8 @@ func BackupFile(filePath string) {
 	if err != nil {
 		log.Fatalf("Can't copy file \"%s\" to %s: %s\n", filePath, bakFilePath, err)
 	}
-	log.Printf("Backup of file %s was created at %s\n", filepath.Base(filePath), bakFilePath)
+	// TODO print bakFilePath path from basedir istead of absolute path?
+	log.Printf("Backup of file %s was created at %s\n", filePath, bakFilePath)
 }
 
 var conf *Conf
@@ -156,6 +171,7 @@ func main() {
 		os.Exit(1)
 	}
 
+	// TODO Use Watchfile type in list instead this maps
 	prevHashSums := make(map[int][]byte)
 	prevFileStats := make(map[int]os.FileInfo)
 
@@ -175,12 +191,14 @@ func main() {
 
 			if prevFileStat.ModTime() != fileStat.ModTime() {
 				prevFileStat = fileStat
+				prevFileStats[index] = prevFileStat
 
 				prevHashSum := prevHashSums[index]
 				hashSum := Sha1Sum(filePath)
 
 				if !bytes.Equal(prevHashSum, hashSum) {
 					prevHashSum = hashSum
+					prevHashSums[index] = prevHashSum
 
 					BackupFile(filePath)
 				}
