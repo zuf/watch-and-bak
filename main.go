@@ -157,6 +157,7 @@ func BackupFile(filePath string) {
 		log.Fatalf("Can't copy file \"%s\" to %s: %s\n", filePath, bakFilePath, err)
 	}
 	// TODO print bakFilePath path from basedir istead of absolute path?
+	// TODO print human readable file size
 	log.Printf("Backup of file %s was created at %s\n", filePath, bakFilePath)
 }
 
@@ -203,8 +204,7 @@ func main() {
 					BackupFile(filePath)
 				}
 			}
-
-			time.Sleep(conf.PollPeriod)
 		}
+		time.Sleep(conf.PollPeriod)
 	}
 }
